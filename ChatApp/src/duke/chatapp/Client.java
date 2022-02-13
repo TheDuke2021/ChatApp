@@ -52,10 +52,10 @@ public class Client{
 				String msg = serverInput.readLine();
 				if(msg.equals(""))
 					continue;
-				//TODO You probably should use EventListener instead of changing messagesArea attributes directly from this thread.
-				System.out.println(SwingUtilities.isEventDispatchThread());
-				messagesArea.setText(messagesArea.getText() + "\n" + msg);
-				messagesArea.setCaretPosition(messagesArea.getDocument().getLength());
+				SwingUtilities.invokeAndWait(() -> {
+					messagesArea.setText(messagesArea.getText() + "\n" + msg);
+					messagesArea.setCaretPosition(messagesArea.getDocument().getLength());
+				});
 			}
 		}catch(UnknownHostException e) {
 			readyForInput = false;
@@ -64,8 +64,13 @@ public class Client{
 //			System.exit(1);
 		}catch(IOException e) {
 			readyForInput = false;
-			System.err.println("An IOException occured in the program.");
+			System.err.println("An IOException occurred in the program.");
 			messagesArea.setText(messagesArea.getText() + "\nAn IOException occured in the program.");
+//			System.exit(1);
+		} catch (InvocationTargetException | InterruptedException e) {
+			readyForInput = false;
+			System.err.println("An exception in the GUI occurred while trying to update the Swing component.");
+			messagesArea.setText(messagesArea.getText() + "\nAn exception in the GUI occurred while trying to update the Swing component.");
 //			System.exit(1);
 		}
 	}
