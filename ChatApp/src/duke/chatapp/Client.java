@@ -23,6 +23,7 @@ import javax.swing.SwingUtilities;
 public class Client{
 	
 	private String name = "";
+	
 	private PrintWriter serverOutput;
 	private BufferedReader serverInput;
 	
@@ -30,6 +31,7 @@ public class Client{
 	private JTextArea messagesArea;
 	private JScrollPane scrollPane;
 	private JTextField messageField;
+	
 	private boolean readyForInput;
 	
 	
@@ -37,41 +39,46 @@ public class Client{
 		
 		try {
 			SwingUtilities.invokeAndWait(()-> loadGUI());
+			printMessage("Connecting to the server...");
 		} catch (InvocationTargetException | InterruptedException e) {
 			System.err.println("An error occured while loading GUI.");
 			System.exit(1);
 		}
 		
-		messagesArea.setText("Connecting to the server...");
 		try(Socket socket = new Socket("localhost", 80)){
 			serverOutput = new PrintWriter(socket.getOutputStream(), true);
 			serverInput = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			readyForInput = true;
-			messagesArea.setText(messagesArea.getText() + "\nConnection established! Say hello to everyone!");
+			printMessage("Connection established! Say hello to everyone!");
+			serverOutput.println(name);
+			if(serverInput.read() != 1)
+				throw new NameIsTakenException();
+			
 			while(true) {
 				String msg = serverInput.readLine();
 				if(msg.equals(""))
 					continue;
-				SwingUtilities.invokeAndWait(() -> {
-					messagesArea.setText(messagesArea.getText() + "\n" + msg);
-					messagesArea.setCaretPosition(messagesArea.getDocument().getLength());
-				});
+				printMessage(msg);
 			}
 		}catch(UnknownHostException e) {
 			readyForInput = false;
 			System.err.println("Cannot determine the IP address of the server.");
-			messagesArea.setText(messagesArea.getText() + "\nCannot determine the IP address of the server.");
+			printError("Cannot determine the IP address of the server.");
 //			System.exit(1);
 		}catch(IOException e) {
 			readyForInput = false;
 			System.err.println("An IOException occurred in the program.");
-			messagesArea.setText(messagesArea.getText() + "\nAn IOException occured in the program.");
+			printError("An IOException occurred in the program.");
 //			System.exit(1);
 		} catch (InvocationTargetException | InterruptedException e) {
 			readyForInput = false;
 			System.err.println("An exception in the GUI occurred while trying to update the Swing component.");
-			messagesArea.setText(messagesArea.getText() + "\nAn exception in the GUI occurred while trying to update the Swing component.");
+			printError("An exception in the GUI occurred while trying to update the Swing component.");
 //			System.exit(1);
+		}catch(NameIsTakenException e) {
+			readyForInput = false;
+			System.err.println("This name is already taken. Pick a different one.");
+			printError("This name is already taken. Pick a different one.");
 		}
 	}
 	
@@ -130,6 +137,20 @@ public class Client{
 		frame.setVisible(true);
 	}
 
+	
+	private void printMessage(String message) throws InvocationTargetException, InterruptedException {
+		SwingUtilities.invokeAndWait(()->{
+			messagesArea.setText(messagesArea.getText() + message + "\n");
+			messagesArea.setCaretPosition(messagesArea.getDocument().getLength());
+		});
+	}
+	
+	private void printError(String message) {
+		SwingUtilities.invokeLater(()->{
+			messagesArea.setText(messagesArea.getText() + message + "\n");
+			messagesArea.setCaretPosition(messagesArea.getDocument().getLength());
+		});
+	}
 	
 	public static void main(String args[]){
 		
