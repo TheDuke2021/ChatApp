@@ -20,7 +20,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 
-public class Client{
+public class Client implements Runnable{
 	
 	private String name = "";
 	
@@ -53,7 +53,7 @@ public class Client{
 			serverOutput.println(name);
 			if(serverInput.read() != 1)
 				throw new NameIsTakenException();
-			
+			new Thread(this).start();
 			while(true) {
 				String msg = serverInput.readLine();
 				if(msg.equals(""))
@@ -109,7 +109,7 @@ public class Client{
 			messageField.setText("");
 			if(msg.equals(""))
 				return;
-			serverOutput.println(name + "\n" + msg);
+			serverOutput.println(msg);
 			
 		});
 		
@@ -156,5 +156,20 @@ public class Client{
 		
 		new Client();
 
+	}
+
+
+	@Override
+	public void run() {
+		try {
+			while(!readyForInput);
+			while(true) {
+				serverOutput.println("spam!");
+				Thread.sleep(0, 100);
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		
 	}
 }
