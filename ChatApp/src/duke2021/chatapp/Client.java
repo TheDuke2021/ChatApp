@@ -1,4 +1,4 @@
-package duke.chatapp;
+package duke2021.chatapp;
 
 import java.awt.BorderLayout;
 import java.awt.Font;
@@ -20,7 +20,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 
-public class Client implements Runnable{
+public class Client{
 	
 	private String name = "";
 	
@@ -35,13 +35,13 @@ public class Client implements Runnable{
 	private boolean readyForInput;
 	
 	
-	Client(){
+	public Client(){
 		
 		try {
-			SwingUtilities.invokeAndWait(()-> loadGUI());
+			SwingUtilities.invokeAndWait(() -> loadGUI());
 			printMessage("Connecting to the server...");
 		} catch (InvocationTargetException | InterruptedException e) {
-			System.err.println("An error occured while loading GUI.");
+			System.err.println("An error occurred while loading GUI.");
 			System.exit(1);
 		}
 		
@@ -51,30 +51,26 @@ public class Client implements Runnable{
 			readyForInput = true;
 			printMessage("Connection established! Say hello to everyone!");
 			serverOutput.println(name);
+			
 			if(serverInput.read() != 1)
 				throw new NameIsTakenException();
-			new Thread(this).start();
+			
 			while(true) {
 				String msg = serverInput.readLine();
-				if(msg.equals(""))
-					continue;
 				printMessage(msg);
 			}
 		}catch(UnknownHostException e) {
 			readyForInput = false;
 			System.err.println("Cannot determine the IP address of the server.");
 			printError("Cannot determine the IP address of the server.");
-//			System.exit(1);
 		}catch(IOException e) {
 			readyForInput = false;
 			System.err.println("An IOException occurred in the program.");
 			printError("An IOException occurred in the program.");
-//			System.exit(1);
 		} catch (InvocationTargetException | InterruptedException e) {
 			readyForInput = false;
 			System.err.println("An exception in the GUI occurred while trying to update the Swing component.");
 			printError("An exception in the GUI occurred while trying to update the Swing component.");
-//			System.exit(1);
 		}catch(NameIsTakenException e) {
 			readyForInput = false;
 			System.err.println("This name is already taken. Pick a different one.");
@@ -85,7 +81,7 @@ public class Client implements Runnable{
 	
 	private void loadGUI() {
 
-		frame = new JFrame("Chat Application");
+		frame = new JFrame();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(600, 400);
 		frame.setResizable(false);
@@ -130,6 +126,7 @@ public class Client implements Runnable{
 		frame.setTitle("Chat Application [" + name + "]");
 		
 		frame.addWindowListener( new WindowAdapter() {
+			@Override
 		    public void windowOpened( WindowEvent e ){
 		        messageField.requestFocus();
 		    }
@@ -140,14 +137,14 @@ public class Client implements Runnable{
 	
 	private void printMessage(String message) throws InvocationTargetException, InterruptedException {
 		SwingUtilities.invokeAndWait(()->{
-			messagesArea.setText(messagesArea.getText() + message + "\n");
+			messagesArea.append(message + "\n");
 			messagesArea.setCaretPosition(messagesArea.getDocument().getLength());
 		});
 	}
 	
 	private void printError(String message) {
 		SwingUtilities.invokeLater(()->{
-			messagesArea.setText(messagesArea.getText() + message + "\n");
+			messagesArea.append(message + "\n");
 			messagesArea.setCaretPosition(messagesArea.getDocument().getLength());
 		});
 	}
@@ -156,20 +153,5 @@ public class Client implements Runnable{
 		
 		new Client();
 
-	}
-
-
-	@Override
-	public void run() {
-		try {
-			while(!readyForInput);
-			while(true) {
-				serverOutput.println("spam!");
-				Thread.sleep(0, 100);
-			}
-		}catch(Exception e) {
-			e.printStackTrace();
-		}
-		
 	}
 }

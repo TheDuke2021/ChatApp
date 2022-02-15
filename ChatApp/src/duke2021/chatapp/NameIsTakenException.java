@@ -1,4 +1,4 @@
-package duke.chatapp;
+package duke2021.chatapp;
 
 class NameIsTakenException extends Exception {
 

@@ -1,4 +1,4 @@
-package duke.chatapp;
+package duke2021.chatapp;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -18,18 +18,16 @@ public class Server{
 	
 	private ServerSocket serverSocket;
 	private Map<Socket, String> clients;
-
 	
 	
-	
-	Server(){
+	public Server(){
 		
 		try {
 			serverSocket = new ServerSocket(80);
 			clients = Collections.synchronizedMap(new HashMap<>());
 			System.out.println("Server started.");
 		}catch(IOException e) {
-			System.err.println("An IOException occured while starting the server");
+			System.err.println("An IOException occurred while starting the server");
 			e.printStackTrace();
 			System.exit(1);
 		}
@@ -42,6 +40,8 @@ public class Server{
 				String name = input.readLine();
 				synchronized(this) {
 					try {
+						//If a user with the duplicate name exists
+						//Deny permission
 						if (clients.containsValue(name)) {
 							output.write(0);
 							output.flush();
@@ -59,13 +59,12 @@ public class Server{
 					}
 				}
 			} catch (IOException e) {
-				System.err.println("An IOException occured while trying to establish contact");
+				System.err.println("An IOException occurred while trying to establish contact");
 				e.printStackTrace();
 				System.exit(1);
 			}
 		}
 	}
-	
 	
 	
 	private void sendMessage(String message) {
@@ -79,7 +78,8 @@ public class Server{
 				output.newLine();
 				output.flush();
 			}catch(IOException e) {
-				//Just ignore
+				//If IOException occurs here, it means the user has disconnected
+				//Just ignore it
 				//We'll notify that the user left in the other thread
 			}
 		}
@@ -106,8 +106,7 @@ public class Server{
 				}
 			}catch(IOException e) {
 				synchronized(this) {
-					String name = clients.get(socket);
-					clients.remove(socket);
+					String name = clients.remove(socket);
 					sendMessage(name + " has disconnected!");
 				}
 			}
